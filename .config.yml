@@ -1,0 +1,103 @@
+version: 2.1
+description: |-
+  Nexploit is a Machine Learning powered Interactive Application Security Testing (IAST) solution. Automating a cyber-security specialist’s critical thinking process to scan any target and find real vulnerabilities, including logical-flow problems, with no false positives.
+  This orb allows you to use Nexploit power in your CI.
+
+  Setup
+  Note - An active subscription for Nexploit is needed for usage of this extension.
+
+  Get API Key
+  In NexPloit Dashboard navigate to the "Organization" tab and scroll to the "Manage your application API keys" section.
+  Press "Create new API key" button and enter any suitable name (circleci key e.g.) Note - Make sure to backup the API key, it can't be restored.
+
+  Using a pre-recorded HAR file
+  Upload the file using a simple curl command:
+
+  ```sh
+  $ curl -X POST "https://nexploit.app/api/v1/files?discard=true"     \
+      -H "Content-Type: multipart/form-data"                          \
+      -H "Authorization: Api-Key yufn0f6.yourapikeykuj069zopv0b1i"    \
+      -F "har=@/path/to/the/file.har"
+  {"ids":["6xkFraa5ecfmHhxTEnabZg"]}
+  ```
+
+  This id will then be used for the File ID field.
+  When setup is complete, the new scan will start automatically and be visible in your Nexploit account.
+
+  Example of CircleCI-config
+  ```yml
+    steps:
+      - nexploit/scan:
+          scan_name: My new scan
+          api_key: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
+          fileId: 27SJV96JZKdWYjsUCM9M1B
+          discovery_types: '"archive", "crawler"'
+          protocol: http
+  ```
+commands:
+  scan:
+    description: Start a new Nexploit scan
+    parameters:
+      api_key:
+        type: string
+        description: 'Api Key. You can get it on "Organization" tab in
+        Nexploit app'
+      scan_name:
+        type: string
+        description: Name for a scan
+      hostname:
+        type: string
+        default: nexploit.app
+        description: Just leave the default value unless you use a special solution
+      fileId:
+        type: string
+        default: ''
+        description: |-
+          Get it with the help of curl `curl -X POST "https://nexploit.app/api/v1/files?discard=true" -H "Content-Type: multipart/form-data" -H "Authorization: Api-Key yufn0f6.yourapikeykuj069zopv0b1i" -F "har=@/path/to/the/file.har"
+          `. This command will return you an id for the File ID field.
+      protocol:
+        type: enum
+        enum:
+          - http
+          - websocket
+      discovery_types:
+        description: 'Array. Can be: "archive", "crawler", "oas". Specify
+        separated by commas and every item in quotes'
+        default: '"archive"'
+        type: string
+      hosts_filter:
+        description: 'Array. Specify separated by commas and every item in quotes'
+        default: ''
+        type: string
+      crawler_urls:
+        description: 'Crawler URLs. Specify separated by commas and every item in quotes'
+        default: ''
+        type: string
+      module:
+        type: enum
+        default: core
+        enum:
+          - core
+          - exploratory
+      type:
+        type: enum
+        default: appscan
+        enum:
+          - appscan
+          - protoscan
+    steps:
+      - run:
+          command: |-
+            curl "https://<< parameters.hostname >>/api/v1/scans" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Api-Key << parameters.api_key >>" \
+            -d '{
+              "name": "<< parameters.scan_name >>",
+              "protocol": "<< parameters.protocol >>",
+              "type": "<< parameters.type >>",
+              "discoveryTypes": [<< parameters.discovery_types >>],
+              <<# parameters.fileId >>"fileId": "<< parameters.fileId >>",<</ parameters.fileId >>
+              <<# parameters.crawler_urls >>"crawlerUrls": "<< parameters.crawler_urls >>",<</ parameters.crawler_urls >>
+              "hostsFilter": [<< parameters.hosts_filter >>],
+              "module": "<< parameters.module >>"
+              }'
