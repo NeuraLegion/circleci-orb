@@ -36,10 +36,11 @@ description: |-
   ```
 commands:
   scan:
-    description: Start a new Nexploit scan
+    description: Start a new Nexploit scan using just a curl
     parameters:
       api_key:
-        type: string
+        type: env_var_name
+        default: NEXPLOIT_API_KEY
         description: 'Api Key. You can get it on "Organization" tab in
         Nexploit app'
       scan_name:
@@ -90,7 +91,7 @@ commands:
           command: |-
             curl "https://<< parameters.hostname >>/api/v1/scans" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Api-Key << parameters.api_key >>" \
+            -H "Authorization: Api-Key $<< parameters.api_key >>" \
             -d '{
               "name": "<< parameters.scan_name >>",
               "protocol": "<< parameters.protocol >>",
