@@ -24,18 +24,48 @@ description: |-
   This id will then be used for the File ID field.
   When setup is complete, the new scan will start automatically and be visible in your Nexploit account.
 
-  Example of CircleCI-config
-  ```yml
-    steps:
-      - nexploit/scan:
-          scan_name: My new scan
-          api_key: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
-          fileId: 27SJV96JZKdWYjsUCM9M1B
-          discovery_types: '"archive", "crawler"'
-          protocol: http
-  ```
+examples:
+  new_scan_curl:
+    description: Run a new scan using just curl and Nexploit API
+    usage:
+      version: 2.1
+      orbs:
+        nexploit: neuralegion/nexploit@0.0.13
+      jobs:
+        build:
+          machine: true
+          environment:
+            NEXPLOIT_API_KEY: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
+          steps:
+          - nexploit/new_scan_curl:
+              scan_name: My new curl scan
+              fileId: 27SJV96JZKdWYjsUCM9M1B
+              discovery_types: '"archive", "crawler"'
+              protocol: http
+  new_scan:
+    description: Run a new scan using npm util
+    usage:
+      version: 2.1
+      orbs:
+        nexploit: neuralegion/nexploit@0.0.13
+      jobs:
+        build:
+          machine: true
+          environment:
+            NEXPLOIT_API_KEY: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
+          steps:
+          - nexploit/scan:
+              scan_name: CircleCI Scan
+              api_key: NEXPLOIT_API_KEY
+              discovery_types: 'crawler'
+              crawlers: 'https://www.random1.org/,https://www.random2.org/'
+              host_filters: 'random1.org,random2.org'
+              headers: 'Content-Type: application/json;Keep-Alive: timeout=5, max=1000'
+              type: appscan
+              protocol: http
+
 commands:
-  scan:
+  new_scan_curl:
     description: Start a new Nexploit scan using just a curl
     parameters:
       api_key:
@@ -102,3 +132,214 @@ commands:
               "hostsFilter": [<< parameters.hosts_filter >>],
               "module": "<< parameters.module >>"
               }'
+
+  new_scan:
+    description: 'Start a new Nexploit scan using nexploit-cli. Requires npm'
+    parameters:
+      api_key:
+        type: env_var_name
+        default: NEXPLOIT_API_KEY
+        description: 'Api Key. You can get it on "Organization" tab in
+        Nexploit app'
+      scan_name:
+        type: string
+        description: Name for a scan
+      protocol:
+        type: enum
+        enum:
+          - http
+          - websocket
+      archive:
+        type: string
+        default: ''
+        description: Path to the archive
+      hostname:
+        type: string
+        default: nexploit.app
+        description: Just leave the default value unless you use a special solution
+      type:
+        type: enum
+        default: appscan
+        enum:
+          - appscan
+          - protoscan
+      discovery_types:
+        description: 'Array. Can be: "archive", "crawler", "oas". Specify
+        separated by commas and every item in quotes'
+        default: '"archive"'
+        type: string
+      crawlers:
+        description: 'Crawler URLs. Specify separated by commas without spaces'
+        default: ''
+        type: string
+      host_filters:
+        description: 'Array. Specify separated by commas without spaces'
+        default: ''
+        type: string
+      headers:
+        description: 'Array. Specify separated by semicolons without spaces'
+        default: ''
+        type: string
+    steps:
+    - run:
+        command: >
+          crawlers="<< parameters.crawlers >>"
+
+          crawlers_list=`echo "--crawler=${crawlers//,/" --crawler="}"`
+
+          echo $crawlers_list
+
+          host_filters="<< parameters.host_filters >>"
+
+          host_filters_list=`echo "--host-filter=${host_filters//,/" --host-filter="}"`
+
+          echo $host_filters_list
+
+          headers="<< parameters.headers >>"
+
+          headers_list=`echo "--header=${headers//;/" --header="}"`
+
+          echo $headers_list
+
+          command="nexploit-cli scan:run
+          --name=<< parameters.scan_name >>
+          <<# parameters.archive >>--archive=<< parameters.archive >><</parameters.archive >>
+          --protocol=<< parameters.protocol >>
+          --api-key=$<< parameters.api_key >>
+          --api=<< parameters.hostname >>
+          --type=<< parameters.type >>
+          --discard=false
+          --discovery=<< parameters.discovery_types >>
+          <<# parameters.crawlers >>$crawlers_list<</parameters.crawlers >>
+          <<# parameters.host_filters >>$host_filters_list<</parameters.host_filters >>
+          <<# parameters.headers >>$headers_list<</parameters.headers >>"
+
+          echo $command
+
+          scan_id=`($command)`
+
+          echo "Your scan is available on << parameters.hostname >>/scans/$scan_id"
+
+  polling_status:
+    description: Allows to poll status and wait for issues. 
+    parameters:
+      api_key:
+        type: env_var_name
+        default: NEXPLOIT_API_KEY
+        description: 'Api Key. You can get it on "Organization" tab in
+        Nexploit app'
+      scan_id:
+        type: string
+        description: Scan id to rerun
+      interval:
+        type: integer
+        default: 5000
+        description: |
+          Period of time between the end of a timeout period or completion of
+          a scan status request, and the next request for status
+      hostname:
+        type: string
+        default: nexploit.app
+        description: Just leave the default value unless you use a special solution
+      failure_on:
+        type: enum
+        default: first-issue
+        enum:
+        - first-issue
+        - first-medium-severity-issue
+        - first-high-severity-issue
+    steps:
+    - run:
+        command: |
+          nexploit-cli scan:polling << parameters.scan_id >>  \
+            --failure-on=<< parameters.failure_on >>          \
+            --api-key=$<< parameters.api_key >>               \
+            --api=<< parameters.hostname >>                   \
+            --interval=<< parameters.interval >>
+
+  retest_scan:
+    description: >
+      Perhaps the most convenient way to start a scan. Start a new scan, using
+      web UI at https://nexploit.app. You can get scan id from address bar.
+      You should use this id to rerun the scan.
+    parameters:
+      api_key:
+        type: env_var_name
+        default: NEXPLOIT_API_KEY
+        description: 'Api Key. You can get it on "Organization" tab in
+        Nexploit app'
+      scan_id:
+        type: string
+        description: Scan id to rerun
+      hostname:
+        type: string
+        default: nexploit.app
+        description: Just leave the default value unless you use a special solution
+    steps:
+    - run:
+        command: |
+          nexploit-cli                          \
+          scan:retest << parameters.scan_id >>  \
+          --api-key=$<< parameters.api_key >>   \
+          --api=<< parameters.hostname >>
+
+jobs:
+  retest-and-poll:
+    description: >
+      Restart scan and poll its status
+    executor: <<parameters.executor>>
+    docker:
+      - image: node:8-jessie
+    parameters:
+      api_key:
+        type: env_var_name
+        default: NEXPLOIT_API_KEY
+        description: 'Api Key. You can get it on "Organization" tab in
+        Nexploit app'
+      scan_id:
+        type: string
+        description: Scan id to rerun
+      hostname:
+        type: string
+        default: nexploit.app
+        description: Just leave the default value unless you use a special solution
+      interval:
+        type: integer
+        default: 5000
+        description: >
+          Period of time between the end of a timeout period or completion of
+          a scan status request, and the next request for status
+      failure_on:
+        type: enum
+        default: first-issue
+        enum:
+        - first-issue
+        - first-medium-severity-issue
+        - first-high-severity-issue
+      executor:
+        default: neuralegion/nexploit-cli
+        description: executor to use for this job
+        type: executor
+    steps:
+      - run:
+          name: Install nexploit-cli
+          environment:
+            DEBIAN_FRONTEND: noninteractive
+          command: |
+            npm config set registry http://registry.npmjs.org/
+            npm install @neuralegion/nexploit-cli -g
+      - run:
+          name: Print API key
+          command: |
+            echo "API token: $NEXPLOIT_API_KEY"
+      - run:
+          command: |
+            SCAN_ID=$(nexploit-cli scan:retest << parameters.scan_id >> \
+              --api-key=$<< parameters.api_key >>                       \
+              --api=<< parameters.hostname >>)
+            echo "New scan: $SCAN_ID"
+            nexploit-cli scan:polling $SCAN_ID                  \
+              --failure-on=<< parameters.failure_on >>          \
+              --api-key=$<< parameters.api_key >>               \
+              --api=<< parameters.hostname >>                   \
+              --interval=<< parameters.interval >>

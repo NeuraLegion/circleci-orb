@@ -1,4 +1,4 @@
-Commands to work with orb:
+### Commands to work with orb
 
 Publish a new version of the orb:
 
@@ -22,4 +22,11 @@ Create a new namespace:
 
 ```sh
 $ circleci namespace create neuralegion github NeuraLegion
+```
+
+### To push image to Docker Hub:
+
+```sh
+$ docker build -t nexploit-cli . && docker tag nexploit-cli neuralegion/nexploit-cli && \
+    docker push neuralegion/nexploit-cli
 ```
