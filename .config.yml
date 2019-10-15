@@ -30,7 +30,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0.0
+        nexploit: neuralegion/nexploit@1.0.2
       jobs:
         build:
           machine: true
@@ -47,7 +47,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0.0
+        nexploit: neuralegion/nexploit@1.0.2
       jobs:
         build:
           machine: true
@@ -68,13 +68,12 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0.0
+        nexploit: neuralegion/nexploit@1.0.2
       workflows:
         your-workflow:
           jobs:
           - nexploit/retest-and-poll:
               scan_id: 7MeuiCeFc25WdJBamaaTG
-              hostname: https://charlie.playground.nexploit.app
               api_key: NEXPLOIT_API_KEY
 
 commands:
@@ -91,7 +90,7 @@ commands:
         description: Name for a scan
       hostname:
         type: string
-        default: nexploit.app
+        default: https://nexploit.app
         description: Just leave the default value unless you use a special solution
       fileId:
         type: string
@@ -132,7 +131,7 @@ commands:
     steps:
       - run:
           command: |-
-            curl "https://<< parameters.hostname >>/api/v1/scans" \
+            curl "<< parameters.hostname >>/api/v1/scans" \
             -H "Content-Type: application/json" \
             -H "Authorization: Api-Key $<< parameters.api_key >>" \
             -d '{
@@ -168,7 +167,7 @@ commands:
         description: Path to the archive
       hostname:
         type: string
-        default: nexploit.app
+        default: https://nexploit.app
         description: Just leave the default value unless you use a special solution
       type:
         type: enum
@@ -252,7 +251,7 @@ commands:
           a scan status request, and the next request for status
       hostname:
         type: string
-        default: nexploit.app
+        default: https://nexploit.app
         description: Just leave the default value unless you use a special solution
       failure_on:
         type: enum
@@ -286,7 +285,7 @@ commands:
         description: Scan id to rerun
       hostname:
         type: string
-        default: nexploit.app
+        default: https://nexploit.app
         description: Just leave the default value unless you use a special solution
     steps:
     - run:
@@ -318,7 +317,7 @@ jobs:
         description: Scan id to rerun
       hostname:
         type: string
-        default: nexploit.app
+        default: https://nexploit.app
         description: Just leave the default value unless you use a special solution
       interval:
         type: integer
