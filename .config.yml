@@ -30,7 +30,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@0.0.13
+        nexploit: neuralegion/nexploit@1.0.0
       jobs:
         build:
           machine: true
@@ -47,7 +47,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@0.0.13
+        nexploit: neuralegion/nexploit@1.0.0
       jobs:
         build:
           machine: true
@@ -63,6 +63,19 @@ examples:
               headers: 'Content-Type: application/json;Keep-Alive: timeout=5, max=1000'
               type: appscan
               protocol: http
+  nexploit_job:
+    description: Retest a scan and wait for results
+    usage:
+      version: 2.1
+      orbs:
+        nexploit: neuralegion/nexploit@1.0.0
+      workflows:
+        your-workflow:
+          jobs:
+          - nexploit/retest-and-poll:
+              scan_id: 7MeuiCeFc25WdJBamaaTG
+              hostname: https://charlie.playground.nexploit.app
+              api_key: NEXPLOIT_API_KEY
 
 commands:
   new_scan_curl:
@@ -283,13 +296,17 @@ commands:
           --api-key=$<< parameters.api_key >>   \
           --api=<< parameters.hostname >>
 
+executors:
+  nexploit-cli:
+    resource_class: small
+    docker:
+      - image: neuralegion/nexploit-cli
+
 jobs:
   retest-and-poll:
     description: >
       Restart scan and poll its status
-    executor: <<parameters.executor>>
-    docker:
-      - image: node:8-jessie
+    executor: nexploit-cli
     parameters:
       api_key:
         type: env_var_name
@@ -316,29 +333,16 @@ jobs:
         - first-issue
         - first-medium-severity-issue
         - first-high-severity-issue
-      executor:
-        default: neuralegion/nexploit-cli
-        description: executor to use for this job
-        type: executor
     steps:
       - run:
-          name: Install nexploit-cli
-          environment:
-            DEBIAN_FRONTEND: noninteractive
+          name: Retest an exesting scan and wait for results
           command: |
-            npm config set registry http://registry.npmjs.org/
-            npm install @neuralegion/nexploit-cli -g
-      - run:
-          name: Print API key
-          command: |
-            echo "API token: $NEXPLOIT_API_KEY"
-      - run:
-          command: |
-            SCAN_ID=$(nexploit-cli scan:retest << parameters.scan_id >> \
+            scan_id=$(nexploit-cli scan:retest << parameters.scan_id >> \
               --api-key=$<< parameters.api_key >>                       \
               --api=<< parameters.hostname >>)
-            echo "New scan: $SCAN_ID"
-            nexploit-cli scan:polling $SCAN_ID                  \
+            echo "Your scan is available on << parameters.hostname >>/scans/$scan_id"
+            echo "Waiting for issues..."
+            nexploit-cli scan:polling $scan_id                  \
               --failure-on=<< parameters.failure_on >>          \
               --api-key=$<< parameters.api_key >>               \
               --api=<< parameters.hostname >>                   \
