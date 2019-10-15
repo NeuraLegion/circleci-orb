@@ -24,6 +24,10 @@ description: |-
   This id will then be used for the File ID field.
   When setup is complete, the new scan will start automatically and be visible in your Nexploit account.
 
+  Website: https://neuralegion.com
+
+  Repo: https://github.com/NeuraLegion/circleci-orb
+
 examples:
   new_scan_curl:
     description: Run a new scan using just curl and Nexploit API
