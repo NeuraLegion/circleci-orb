@@ -300,7 +300,7 @@ commands:
           --api=<< parameters.hostname >>
 
 executors:
-  nexploit-cli:
+  default:
     resource_class: small
     docker:
       - image: neuralegion/nexploit-cli
@@ -309,7 +309,7 @@ jobs:
   retest-and-poll:
     description: >
       Restart scan and poll its status
-    executor: nexploit-cli
+    executor: default
     parameters:
       api_key:
         type: env_var_name
