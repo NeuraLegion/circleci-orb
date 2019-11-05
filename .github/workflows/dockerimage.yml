@@ -1,0 +1,21 @@
+name: Docker Image CI
+
+on:
+  schedule:
+  - cron: 0 0 6 * *
+  push:
+
+jobs:
+
+  build:
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag neuralegion/nexploit-cli;
+    - name: Login in Docker
+      run: docker login --username=anatol1988 --password=${{ secrets.DOCKER_TOKEN }}
+    - name: Push Docker image
+      run: docker push neuralegion/nexploit-cli
