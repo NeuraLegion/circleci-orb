@@ -38,8 +38,6 @@ examples:
       jobs:
         build:
           machine: true
-          environment:
-            NEXPLOIT_API_KEY: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
           steps:
           - nexploit/new_scan_curl:
               scan_name: My new curl scan
@@ -55,8 +53,6 @@ examples:
       jobs:
         build:
           machine: true
-          environment:
-            NEXPLOIT_API_KEY: wzuxs3v.vqrwcnaiiaggv6ubfm60dr58vmimbrtr
           steps:
           - nexploit/scan:
               scan_name: CircleCI Scan
@@ -81,6 +77,29 @@ examples:
               api_key: NEXPLOIT_API_KEY
 
 commands:
+  install:
+    description: >
+      Installs nexploit-cli util to the environment. You need this util for 
+      working with nexploit API. `nexploit-cli` requires Node v12 to be
+      installed.
+    steps:
+    - run:
+        name: Install nexploit-cli
+        command: |
+          if which npm > /dev/null
+          then
+            if which nexploit-cli > /dev/null
+              then
+                echo "nexploit-cli is already installed"
+              else
+                npm config set registry http://registry.npmjs.org/
+                npm install @neuralegion/nexploit-cli -g
+              fi
+          else
+            echo "You need to install Node v12"
+            exit 1
+          fi
+
   new_scan_curl:
     description: Start a new Nexploit scan using just a curl
     parameters:
@@ -301,9 +320,21 @@ commands:
 
 executors:
   default:
+    description: >
+      Default environment for Nexploit. This is a small Alpine-based Docker
+      image with a low resource class.
+    parameters:
+      image:
+        type: string
+        default: "neuralegion/nexploit-cli"
+        description: Docker image name
+      tag:
+        type: string
+        default: "latest"
+        description: Docker image tag
     resource_class: small
     docker:
-      - image: neuralegion/nexploit-cli
+      - image: <<parameters.image>>:<<parameters.tag>>
 
 jobs:
   retest-and-poll:
