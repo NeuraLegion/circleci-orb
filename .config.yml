@@ -29,7 +29,7 @@ description: |-
   Repo: https://github.com/NeuraLegion/circleci-orb
 
 examples:
-  new_scan_curl:
+  new-scan-curl:
     description: Run a new scan using just curl and Nexploit API
     usage:
       version: 2.1
@@ -39,12 +39,12 @@ examples:
         build:
           machine: true
           steps:
-          - nexploit/new_scan_curl:
+          - nexploit/new-scan-curl:
               scan_name: My new curl scan
               fileId: 27SJV96JZKdWYjsUCM9M1B
               discovery_types: '"archive", "crawler"'
               protocol: http
-  new_scan:
+  new-scan:
     description: Run a new scan using npm util
     usage:
       version: 2.1
@@ -100,7 +100,7 @@ commands:
             exit 1
           fi
 
-  new_scan_curl:
+  new-scan-curl:
     description: Start a new Nexploit scan using just a curl
     parameters:
       api_key:
@@ -168,7 +168,7 @@ commands:
               "module": "<< parameters.module >>"
               }'
 
-  new_scan:
+  new-scan:
     description: 'Start a new Nexploit scan using nexploit-cli. Requires npm'
     parameters:
       api_key:
@@ -255,7 +255,7 @@ commands:
 
           echo "Your scan is available on << parameters.hostname >>/scans/$scan_id"
 
-  polling_status:
+  polling-status:
     description: Allows to poll status and wait for issues. 
     parameters:
       api_key:
@@ -292,7 +292,7 @@ commands:
             --api=<< parameters.hostname >>                   \
             --interval=<< parameters.interval >>
 
-  retest_scan:
+  retest-scan:
     description: >
       Perhaps the most convenient way to start a scan. Start a new scan, using
       web UI at https://nexploit.app. You can get scan id from address bar.
