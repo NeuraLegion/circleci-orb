@@ -34,7 +34,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0
+        nexploit: neuralegion/nexploit@1.1
       jobs:
         build:
           machine: true
@@ -49,7 +49,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0
+        nexploit: neuralegion/nexploit@1.1
       jobs:
         build:
           machine: true
@@ -68,7 +68,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        nexploit: neuralegion/nexploit@1.0
+        nexploit: neuralegion/nexploit@1.1
       workflows:
         your-workflow:
           jobs:
@@ -326,11 +326,11 @@ executors:
     parameters:
       image:
         type: string
-        default: "neuralegion/nexploit-cli"
+        default: neuralegion/nexploit-cli
         description: Docker image name
       tag:
         type: string
-        default: "latest"
+        default: latest
         description: Docker image tag
     resource_class: small
     docker:
@@ -340,7 +340,10 @@ jobs:
   retest-and-poll:
     description: >
       Restart scan and poll its status
-    executor: default
+    executor:
+      name: default
+      image: << parameters.executor_image >>
+      tag: << parameters.executor_tag >>
     parameters:
       api_key:
         type: env_var_name
@@ -367,6 +370,14 @@ jobs:
         - first-issue
         - first-medium-severity-issue
         - first-high-severity-issue
+      executor_image:
+        type: string
+        default: neuralegion/nexploit-cli
+        description: Docker image name
+      executor_tag:
+        type: string
+        default: latest
+        description: Docker image tag
     steps:
       - run:
           name: Retest an exesting scan and wait for results
